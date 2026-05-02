@@ -1,0 +1,17 @@
+name: LiftSim
+version: 1.0.0
+main: com.skiresort.liftsim.LiftSim
+api-version: 1.20
+description: Chairlift chair loading/unloading simulation
+authors: [SkiResort]
+
+commands:
+  lift:
+    description: Manage chairlift chairs
+    usage: /lift <load|unload|status|list> [name]
+    permission: liftsim.manage
+
+permissions:
+  liftsim.manage:
+    description: Allows use of all LiftSim commands
+    default: op

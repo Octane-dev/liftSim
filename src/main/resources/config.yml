@@ -1,0 +1,45 @@
+# LiftSim Configuration
+# ---------------------
+# Define each chairlift here.
+# Templates are bounding boxes in the world containing the chair design.
+# The plugin scans from cable-start along iron_bars to find mount points.
+
+world: world
+
+lifts:
+  - name: example-lift
+    # First iron_bar block of the cable to start scanning from (bottom terminal exit)
+    cable-start:
+      x: 0
+      y: 64
+      z: 0
+    # Spacing between chairs on the open cable (in iron_bar blocks)
+    cable-spacing: 24
+    # Spacing between chairs inside terminals (in gray_wool blocks, excluding corners)
+    terminal-spacing: 4
+    # Number of blocks over which spacing ramps between cable and terminal speed
+    transition-blocks: 6
+    # Corner detection — direction change in degrees above this = corner, skip chair
+    corner-angle-threshold: 30
+    # Chair templates — bounding boxes of the chair designs in the world
+    templates:
+      uphill:
+        # Corner of the template build (lowest X, Y, Z)
+        origin: {x: 0, y: 0, z: 0}
+        # Size of the bounding box
+        size-x: 3
+        size-y: 4
+        size-z: 3
+        # Offset from the cable block to paste the template origin
+        # e.g. offset-y: -3 means the template starts 3 blocks below the cable block
+        offset-x: -1
+        offset-y: -3
+        offset-z: -1
+      downhill:
+        origin: {x: 10, y: 0, z: 0}
+        size-x: 3
+        size-y: 4
+        size-z: 3
+        offset-x: -1
+        offset-y: -3
+        offset-z: -1
