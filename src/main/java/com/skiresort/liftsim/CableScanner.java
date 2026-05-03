@@ -63,7 +63,7 @@ public class CableScanner {
             BlockType blockType;
 
             // Find next block before classifying current
-            int[] next = findNext(world, cx, cy, cz, px, py, pz);
+            int[] next = findNext(world, cx, cy, cz, px, py, pz, step == 0);
 
             // Calculate direction from previous to current
             double curDX = 0, curDY = 0, curDZ = 0;
@@ -107,9 +107,13 @@ public class CableScanner {
      * Find the next cable block adjacent to (cx,cy,cz), excluding the block
      * we just came from (px,py,pz) to prevent backtracking.
      * Searches the 3x3x3 neighbourhood.
+     *
+     * @param firstStep if true, only iron_bars are valid next blocks (not gray_wool).
+     *                  This prevents the scanner from immediately entering the bottom
+     *                  terminal on the very first step from cable-start.
      */
     private static int[] findNext(World world, int cx, int cy, int cz,
-                                   int px, int py, int pz) {
+                                   int px, int py, int pz, boolean firstStep) {
         for (int dx = -1; dx <= 1; dx++) {
             for (int dy = -1; dy <= 1; dy++) {
                 for (int dz = -1; dz <= 1; dz++) {
@@ -117,6 +121,8 @@ public class CableScanner {
                     int nx = cx+dx, ny = cy+dy, nz = cz+dz;
                     if (nx == px && ny == py && nz == pz) continue; // no backtrack
                     Material mat = world.getBlockAt(nx, ny, nz).getType();
+                    // On the first step, only allow iron_bars to force direction up the cable
+                    if (firstStep && mat != Material.IRON_BARS) continue;
                     if (CABLE_MATERIALS.contains(mat)) return new int[]{nx, ny, nz};
                 }
             }
