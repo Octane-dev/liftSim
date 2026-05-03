@@ -64,17 +64,18 @@ public class LiftManager {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private LiftDefinition.TemplateDefinition parseTemplate(Map<?, ?> m) {
-        Map<?, ?> origin = (Map<?, ?>) m.get("origin");
+        Map<String, Object> origin = (Map<String, Object>) m.get("origin");
         int ox = ((Number) origin.get("x")).intValue();
         int oy = ((Number) origin.get("y")).intValue();
         int oz = ((Number) origin.get("z")).intValue();
         int sx = ((Number) m.get("size-x")).intValue();
         int sy = ((Number) m.get("size-y")).intValue();
         int sz = ((Number) m.get("size-z")).intValue();
-        int offX = ((Number) m.getOrDefault("offset-x", 0)).intValue();
-        int offY = ((Number) m.getOrDefault("offset-y", -3)).intValue();
-        int offZ = ((Number) m.getOrDefault("offset-z", 0)).intValue();
+        Object offXObj = m.get("offset-x"); int offX = offXObj != null ? ((Number) offXObj).intValue() : 0;
+        Object offYObj = m.get("offset-y"); int offY = offYObj != null ? ((Number) offYObj).intValue() : -3;
+        Object offZObj = m.get("offset-z"); int offZ = offZObj != null ? ((Number) offZObj).intValue() : 0;
         return new LiftDefinition.TemplateDefinition(ox, oy, oz, sx, sy, sz, offX, offY, offZ);
     }
 
@@ -335,7 +336,9 @@ public class LiftManager {
         if (blockList == null) return null;
 
         List<PlacedBlock> blocks = new ArrayList<>();
-        for (Map<?, ?> m : blockList) {
+        for (Map<?, ?> entry : blockList) {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> m = (Map<String, Object>) entry;
             int x  = ((Number) m.get("x")).intValue();
             int y  = ((Number) m.get("y")).intValue();
             int z  = ((Number) m.get("z")).intValue();
