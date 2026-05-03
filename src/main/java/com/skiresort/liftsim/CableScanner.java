@@ -33,6 +33,13 @@ public class CableScanner {
         Material.GRAY_WOOL
     );
 
+    // Blocks that count as "air beneath" for cable iron_bar validation
+    private static final Set<Material> AIR_LIKE = EnumSet.of(
+        Material.AIR,
+        Material.CAVE_AIR,
+        Material.VOID_AIR
+    );
+
     /**
      * Walk the cable from the start block, returning an ordered list of
      * every cable block encountered. Stops when it returns to the start
@@ -45,6 +52,7 @@ public class CableScanner {
      */
     public static List<CableBlock> scan(World world,
                                         int startX, int startY, int startZ,
+                                        Double dirDX, Double dirDY, Double dirDZ,
                                         double cornerThreshold, int maxBlocks) {
         List<CableBlock> path = new ArrayList<>();
         Set<String> visited  = new HashSet<>();
@@ -63,7 +71,7 @@ public class CableScanner {
             BlockType blockType;
 
             // Find next block before classifying current
-            int[] next = findNext(world, cx, cy, cz, px, py, pz, step == 0);
+            int[] next = findNext(world, cx, cy, cz, px, py, pz, step == 0, dirDX, dirDY, dirDZ);
 
             // Calculate direction from previous to current
             double curDX = 0, curDY = 0, curDZ = 0;
@@ -113,21 +121,44 @@ public class CableScanner {
      *                  terminal on the very first step from cable-start.
      */
     private static int[] findNext(World world, int cx, int cy, int cz,
-                                   int px, int py, int pz, boolean firstStep) {
+                                   int px, int py, int pz, boolean firstStep,
+                                   Double dirDX, Double dirDY, Double dirDZ) {
+        int[] best = null;
+        double bestAlignment = -2.0;
+
         for (int dx = -1; dx <= 1; dx++) {
             for (int dy = -1; dy <= 1; dy++) {
                 for (int dz = -1; dz <= 1; dz++) {
                     if (dx == 0 && dy == 0 && dz == 0) continue;
                     int nx = cx+dx, ny = cy+dy, nz = cz+dz;
-                    if (nx == px && ny == py && nz == pz) continue; // no backtrack
+                    if (nx == px && ny == py && nz == pz) continue;
                     Material mat = world.getBlockAt(nx, ny, nz).getType();
-                    // On the first step, only allow iron_bars to force direction up the cable
                     if (firstStep && mat != Material.IRON_BARS) continue;
-                    if (CABLE_MATERIALS.contains(mat)) return new int[]{nx, ny, nz};
+                    if (!CABLE_MATERIALS.contains(mat)) continue;
+
+                    // Iron bars must have air beneath them to be valid cable blocks.
+                    // This excludes iron_bars used in tower construction which sit on solid blocks.
+                    if (mat == Material.IRON_BARS) {
+                        Material below = world.getBlockAt(nx, ny - 1, nz).getType();
+                        if (!AIR_LIKE.contains(below)) continue;
+                    }
+
+                    // If we have a direction hint, prefer candidates aligned with it
+                    if (dirDX != null && firstStep) {
+                        double len = Math.sqrt(dx*dx + dy*dy + dz*dz);
+                        double dot = (dx/len)*dirDX + (dy/len)*dirDY + (dz/len)*dirDZ;
+                        if (dot > bestAlignment) {
+                            bestAlignment = dot;
+                            best = new int[]{nx, ny, nz};
+                        }
+                    } else {
+                        // No direction hint — return first valid candidate
+                        return new int[]{nx, ny, nz};
+                    }
                 }
             }
         }
-        return null;
+        return best;
     }
 
     private static String key(int x, int y, int z) {
