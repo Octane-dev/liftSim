@@ -28,6 +28,9 @@ public class RegistrationSession {
     public Integer uphillOffsetX, uphillOffsetY, uphillOffsetZ;
     public Integer downhillOffsetX, downhillOffsetY, downhillOffsetZ;
 
+    // Optional initial cable direction hint (second iron_bar up the cable from start)
+    public Integer cableDirectionX, cableDirectionY, cableDirectionZ;
+
     public RegistrationSession(String liftName) {
         this.liftName = liftName;
     }
@@ -44,6 +47,7 @@ public class RegistrationSession {
         StringBuilder sb = new StringBuilder();
         sb.append("§aRegistration session: §f").append(liftName).append("\n");
         sb.append(field("cable-start",      cableStartX, cableStartY, cableStartZ));
+        sb.append(field("cable-direction",  cableDirectionX, cableDirectionY, cableDirectionZ));
         sb.append(field("uphill-origin",    uphillOriginX, uphillOriginY, uphillOriginZ));
         sb.append(field("uphill-corner",    uphillCornerX, uphillCornerY, uphillCornerZ));
         sb.append(field("downhill-origin",  downhillOriginX, downhillOriginY, downhillOriginZ));
