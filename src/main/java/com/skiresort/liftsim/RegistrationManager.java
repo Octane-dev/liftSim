@@ -72,7 +72,11 @@ public class RegistrationManager {
         List<Map<?, ?>> existing = yaml.getMapList("lifts");
         for (Map<?, ?> m : existing) {
             if (s.liftName.equals(m.get("name"))) continue; // replace if already exists
-            lifts.add(new LinkedHashMap<>(m));
+            Map<String, Object> copy = new LinkedHashMap<>();
+            for (Map.Entry<?, ?> entry : m.entrySet()) {
+                copy.put(String.valueOf(entry.getKey()), entry.getValue());
+            }
+            lifts.add(copy);
         }
 
         // Build new lift entry
