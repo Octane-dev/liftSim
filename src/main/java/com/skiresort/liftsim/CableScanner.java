@@ -145,6 +145,23 @@ public class CableScanner {
         int[] best = null;
         double bestAlignment = -2.0;
 
+        // Compute current travel direction from previous to current position
+        double curDX = 0, curDY = 0, curDZ = 0;
+        boolean hasCurrentDir = (px != Integer.MIN_VALUE);
+        if (hasCurrentDir) {
+            double len = Math.sqrt(Math.pow(cx-px,2)+Math.pow(cy-py,2)+Math.pow(cz-pz,2));
+            if (len > 0) { curDX=(cx-px)/len; curDY=(cy-py)/len; curDZ=(cz-pz)/len; }
+        }
+
+        // Use direction hint on first step if available, otherwise use current travel direction
+        double refDX = 0, refDY = 0, refDZ = 0;
+        boolean hasRef = false;
+        if (firstStep && dirDX != null) {
+            refDX = dirDX; refDY = dirDY; refDZ = dirDZ; hasRef = true;
+        } else if (hasCurrentDir) {
+            refDX = curDX; refDY = curDY; refDZ = curDZ; hasRef = true;
+        }
+
         for (int dx = -1; dx <= 1; dx++) {
             for (int dy = -1; dy <= 1; dy++) {
                 for (int dz = -1; dz <= 1; dz++) {
@@ -155,20 +172,15 @@ public class CableScanner {
                     if (firstStep && mat != Material.IRON_BARS) continue;
                     if (!CABLE_MATERIALS.contains(mat)) continue;
 
-                    // No air-beneath check — sheave deepslate blocks connect directly to iron_bars
-                    // and the exit iron_bar will have deepslate below it, not air.
-                    // Direction hint and first-step iron_bar-only rule handle terminal avoidance.
-
-                    // If we have a direction hint, prefer candidates aligned with it
-                    if (dirDX != null && firstStep) {
+                    if (hasRef) {
+                        // Always prefer the candidate most aligned with our travel direction
                         double len = Math.sqrt(dx*dx + dy*dy + dz*dz);
-                        double dot = (dx/len)*dirDX + (dy/len)*dirDY + (dz/len)*dirDZ;
+                        double dot = (dx/len)*refDX + (dy/len)*refDY + (dz/len)*refDZ;
                         if (dot > bestAlignment) {
                             bestAlignment = dot;
                             best = new int[]{nx, ny, nz};
                         }
                     } else {
-                        // No direction hint — return first valid candidate
                         return new int[]{nx, ny, nz};
                     }
                 }
