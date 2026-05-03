@@ -114,8 +114,25 @@ public class LiftManager {
 
         if (cable.isEmpty()) return "No cable blocks found from start point.";
 
+        // Debug — log first 20 and last 10 cable blocks so we can see the scan path
+        plugin.getLogger().info("[LiftSim] Cable scan for '" + name + "': " + cable.size() + " blocks total.");
+        plugin.getLogger().info("[LiftSim] First 20 blocks:");
+        for (int i = 0; i < Math.min(20, cable.size()); i++) {
+            CableScanner.CableBlock cb = cable.get(i);
+            plugin.getLogger().info("  [" + i + "] " + cb.type + " @ " + cb.x + "," + cb.y + "," + cb.z);
+        }
+        if (cable.size() > 20) {
+            plugin.getLogger().info("[LiftSim] Last 10 blocks:");
+            for (int i = Math.max(20, cable.size() - 10); i < cable.size(); i++) {
+                CableScanner.CableBlock cb = cable.get(i);
+                plugin.getLogger().info("  [" + i + "] " + cb.type + " @ " + cb.x + "," + cb.y + "," + cb.z);
+            }
+        }
+
         // Find the top terminal transition — first gray_wool section after initial cable
         int topTerminalIdx = findTopTerminalEnd(cable);
+        plugin.getLogger().info("[LiftSim] Top terminal end at index: " + topTerminalIdx
+                + " of " + cable.size() + " total blocks.");
 
         // Determine mount points with variable spacing
         List<MountPoint> mounts = findMountPoints(cable, topTerminalIdx,
