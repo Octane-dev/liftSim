@@ -41,13 +41,6 @@ public class CableScanner {
         Material.POLISHED_DEEPSLATE_SLAB
     );
 
-    // Blocks that count as "air beneath" for cable iron_bar validation
-    private static final Set<Material> AIR_LIKE = EnumSet.of(
-        Material.AIR,
-        Material.CAVE_AIR,
-        Material.VOID_AIR
-    );
-
     /**
      * Walk the cable from the start block, returning an ordered list of
      * every cable block encountered. Stops when it returns to the start
@@ -77,6 +70,18 @@ public class CableScanner {
         for (int step = 0; step < maxBlocks; step++) {
             Material mat = world.getBlockAt(cx, cy, cz).getType();
             BlockType blockType;
+
+            // Debug: log neighbours considered at each step
+            if (step < 30) {
+                StringBuilder nb = new StringBuilder();
+                for (int dx = -1; dx <= 1; dx++) for (int dy = -1; dy <= 1; dy++) for (int dz = -1; dz <= 1; dz++) {
+                    if (dx==0&&dy==0&&dz==0) continue;
+                    int nx=cx+dx,ny=cy+dy,nz=cz+dz;
+                    Material nm = world.getBlockAt(nx,ny,nz).getType();
+                    if (CABLE_MATERIALS.contains(nm)) nb.append(" ").append(nm).append("@").append(nx).append(",").append(ny).append(",").append(nz);
+                }
+                System.out.println("[LiftSim-debug] step=" + step + " at=" + cx+","+cy+","+cz + " mat=" + mat + " prev=" + px+","+py+","+pz + " cableNeighbours:" + nb);
+            }
 
             // Find next block before classifying current
             int[] next = findNext(world, cx, cy, cz, px, py, pz, step == 0, dirDX, dirDY, dirDZ);
@@ -150,15 +155,9 @@ public class CableScanner {
                     if (firstStep && mat != Material.IRON_BARS) continue;
                     if (!CABLE_MATERIALS.contains(mat)) continue;
 
-                    // Iron bars must have air beneath them — excludes structural iron_bars
-                    // in towers that sit on solid blocks.
-                    // Tower sheaves (polished_deepslate) are exempt from this check.
-                    if (mat == Material.IRON_BARS) {
-                        Material below = world.getBlockAt(nx, ny - 1, nz).getType();
-                        if (!AIR_LIKE.contains(below)) continue;
-                    }
-                    // Polished deepslate slabs — only valid if top half (type=top means cable mount)
-                    // We accept both slab types since blockdata check is complex; filter by context
+                    // No air-beneath check — sheave deepslate blocks connect directly to iron_bars
+                    // and the exit iron_bar will have deepslate below it, not air.
+                    // Direction hint and first-step iron_bar-only rule handle terminal avoidance.
 
                     // If we have a direction hint, prefer candidates aligned with it
                     if (dirDX != null && firstStep) {
