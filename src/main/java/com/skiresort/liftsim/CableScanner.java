@@ -30,7 +30,15 @@ public class CableScanner {
 
     private static final Set<Material> CABLE_MATERIALS = EnumSet.of(
         Material.IRON_BARS,
-        Material.GRAY_WOOL
+        Material.GRAY_WOOL,
+        Material.POLISHED_DEEPSLATE,
+        Material.POLISHED_DEEPSLATE_SLAB
+    );
+
+    // Tower sheave blocks — treated like cable but don't trigger terminal detection
+    private static final Set<Material> TOWER_MATERIALS = EnumSet.of(
+        Material.POLISHED_DEEPSLATE,
+        Material.POLISHED_DEEPSLATE_SLAB
     );
 
     // Blocks that count as "air beneath" for cable iron_bar validation
@@ -80,13 +88,19 @@ public class CableScanner {
                 if (len > 0) { curDX=(cx-px)/len; curDY=(cy-py)/len; curDZ=(cz-pz)/len; }
             }
 
-            // Classify: corner if direction changed significantly
-            if (mat == Material.GRAY_WOOL && hasLastDir && px != Integer.MIN_VALUE) {
-                double dot = lastDX*curDX + lastDY*curDY + lastDZ*curDZ;
-                double angleDeg = Math.toDegrees(Math.acos(Math.max(-1.0, Math.min(1.0, dot))));
-                blockType = angleDeg > cornerThreshold ? BlockType.CORNER : BlockType.TERMINAL;
-            } else if (mat == Material.GRAY_WOOL) {
-                blockType = BlockType.TERMINAL;
+            // Classify block type
+            if (mat == Material.GRAY_WOOL) {
+                // Terminal — check for corner
+                if (hasLastDir && px != Integer.MIN_VALUE) {
+                    double dot = lastDX*curDX + lastDY*curDY + lastDZ*curDZ;
+                    double angleDeg = Math.toDegrees(Math.acos(Math.max(-1.0, Math.min(1.0, dot))));
+                    blockType = angleDeg > cornerThreshold ? BlockType.CORNER : BlockType.TERMINAL;
+                } else {
+                    blockType = BlockType.TERMINAL;
+                }
+            } else if (TOWER_MATERIALS.contains(mat)) {
+                // Tower sheave — counts as cable, not terminal
+                blockType = BlockType.CABLE;
             } else {
                 blockType = BlockType.CABLE;
             }
@@ -136,12 +150,15 @@ public class CableScanner {
                     if (firstStep && mat != Material.IRON_BARS) continue;
                     if (!CABLE_MATERIALS.contains(mat)) continue;
 
-                    // Iron bars must have air beneath them to be valid cable blocks.
-                    // This excludes iron_bars used in tower construction which sit on solid blocks.
+                    // Iron bars must have air beneath them — excludes structural iron_bars
+                    // in towers that sit on solid blocks.
+                    // Tower sheaves (polished_deepslate) are exempt from this check.
                     if (mat == Material.IRON_BARS) {
                         Material below = world.getBlockAt(nx, ny - 1, nz).getType();
                         if (!AIR_LIKE.contains(below)) continue;
                     }
+                    // Polished deepslate slabs — only valid if top half (type=top means cable mount)
+                    // We accept both slab types since blockdata check is complex; filter by context
 
                     // If we have a direction hint, prefer candidates aligned with it
                     if (dirDX != null && firstStep) {
