@@ -172,6 +172,20 @@ public class CableScanner {
                     if (firstStep && mat != Material.IRON_BARS) continue;
                     if (!CABLE_MATERIALS.contains(mat)) continue;
 
+                    // Validate block is a genuine cable block, not structural:
+                    // Iron bars and polished deepslate must have air OR polished deepslate below them.
+                    // This excludes structural iron_bars/deepslate built into towers/buildings.
+                    // Exception: polished_deepslate directly above polished_deepslate is allowed
+                    // (the stacked middle blocks of a sheave).
+                    if (mat == Material.IRON_BARS || TOWER_MATERIALS.contains(mat)) {
+                        Material below = world.getBlockAt(nx, ny - 1, nz).getType();
+                        boolean belowIsAir      = below == Material.AIR
+                                               || below == Material.CAVE_AIR
+                                               || below == Material.VOID_AIR;
+                        boolean belowIsSheave   = TOWER_MATERIALS.contains(below);
+                        if (!belowIsAir && !belowIsSheave) continue;
+                    }
+
                     if (hasRef) {
                         // Always prefer the candidate most aligned with our travel direction
                         double len = Math.sqrt(dx*dx + dy*dy + dz*dz);
