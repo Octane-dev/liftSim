@@ -10,6 +10,8 @@ public class LiftDefinition {
     public final String name;
     public final String world;
     public final int cableStartX, cableStartY, cableStartZ;
+    // Initial direction hint — vector from cable-start to cable-direction block (may be null)
+    public final Double cableDirDX, cableDirDY, cableDirDZ;
     public final int cableSpacing;
     public final int terminalSpacing;
     public final int transitionBlocks;
@@ -19,6 +21,7 @@ public class LiftDefinition {
 
     public LiftDefinition(String name, String world,
                           int cableStartX, int cableStartY, int cableStartZ,
+                          Double cableDirDX, Double cableDirDY, Double cableDirDZ,
                           int cableSpacing, int terminalSpacing, int transitionBlocks,
                           double cornerAngleThreshold,
                           TemplateDefinition uphillTemplate,
@@ -28,6 +31,9 @@ public class LiftDefinition {
         this.cableStartX        = cableStartX;
         this.cableStartY        = cableStartY;
         this.cableStartZ        = cableStartZ;
+        this.cableDirDX         = cableDirDX;
+        this.cableDirDY         = cableDirDY;
+        this.cableDirDZ         = cableDirDZ;
         this.cableSpacing       = cableSpacing;
         this.terminalSpacing    = terminalSpacing;
         this.transitionBlocks   = transitionBlocks;
