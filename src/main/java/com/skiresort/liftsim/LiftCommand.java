@@ -141,6 +141,29 @@ public class LiftCommand implements CommandExecutor, TabCompleter {
                         + b.getX() + " " + b.getY() + " " + b.getZ()
                         + " (" + b.getType() + ")");
             }
+            case "cable-direction" -> {
+                if (session.cableStartX == null) {
+                    p.sendMessage(ChatColor.RED + "Set cable-start first.");
+                    return;
+                }
+                Block b = getTargetBlock(p);
+                if (b == null) { p.sendMessage(ChatColor.RED + "Not looking at a block."); return; }
+                session.cableDirectionX = b.getX();
+                session.cableDirectionY = b.getY();
+                session.cableDirectionZ = b.getZ();
+                p.sendMessage(ChatColor.GREEN + "[LiftSim] cable-direction set to "
+                        + b.getX() + " " + b.getY() + " " + b.getZ()
+                        + " (" + b.getType() + ")");
+                // Show the direction vector for confirmation
+                double dx = b.getX() - session.cableStartX;
+                double dy = b.getY() - session.cableStartY;
+                double dz = b.getZ() - session.cableStartZ;
+                double len = Math.sqrt(dx*dx + dy*dy + dz*dz);
+                if (len > 0) {
+                    p.sendMessage(ChatColor.GRAY + "  Direction vector: "
+                            + String.format("%.2f %.2f %.2f", dx/len, dy/len, dz/len));
+                }
+            }
             case "uphill-origin" -> {
                 Block b = getTargetBlock(p);
                 if (b == null) { p.sendMessage(ChatColor.RED + "Not looking at a block."); return; }
@@ -309,6 +332,7 @@ public class LiftCommand implements CommandExecutor, TabCompleter {
     private void sendSetHelp(CommandSender sender) {
         sender.sendMessage(ChatColor.AQUA + "-- /lift set properties --");
         sender.sendMessage(ChatColor.WHITE + "cable-start         " + ChatColor.GRAY + "Look at first iron_bar on open cable");
+        sender.sendMessage(ChatColor.WHITE + "cable-direction     " + ChatColor.GRAY + "Look at second iron_bar up the cable (for diagonal lifts)");
         sender.sendMessage(ChatColor.WHITE + "uphill-origin       " + ChatColor.GRAY + "Look at one corner of uphill template");
         sender.sendMessage(ChatColor.WHITE + "uphill-corner       " + ChatColor.GRAY + "Look at opposite corner of uphill template");
         sender.sendMessage(ChatColor.WHITE + "downhill-origin     " + ChatColor.GRAY + "Look at one corner of downhill template");
@@ -331,7 +355,7 @@ public class LiftCommand implements CommandExecutor, TabCompleter {
                 case "load", "unload", "status" ->
                         filterStart(args[1], new ArrayList<>(plugin.getLiftManager().getLiftNames()));
                 case "set" -> filterStart(args[1], Arrays.asList(
-                        "cable-start", "uphill-origin", "uphill-corner",
+                        "cable-start", "cable-direction", "uphill-origin", "uphill-corner",
                         "downhill-origin", "downhill-corner",
                         "spacing", "transition", "corner-threshold", "offset"));
                 default -> Collections.emptyList();
