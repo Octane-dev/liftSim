@@ -115,7 +115,7 @@ public class LiftManager {
         if (cable.isEmpty()) return "No cable blocks found from start point.";
 
         // Find the top terminal transition — first gray_wool section after initial cable
-        int topTerminalIdx = findTopTerminal(cable);
+        int topTerminalIdx = findTopTerminalEnd(cable);
 
         // Determine mount points with variable spacing
         List<MountPoint> mounts = findMountPoints(cable, topTerminalIdx,
@@ -181,17 +181,34 @@ public class LiftManager {
     // ── Cable path analysis ───────────────────────────────────────────────────
 
     /**
-     * Find where the top terminal starts — the first gray_wool block
-     * encountered after at least some cable (iron_bars) have been seen.
+     * Find where the top terminal ENDS — i.e. the index of the first cable block
+     * after the top terminal gray_wool section is fully passed.
+     * All blocks before this index are uphill, all after are downhill.
+     *
+     * Detection: scan forward, find the first gray_wool section after some cable,
+     * then find where it ends (first non-terminal block after the gray_wool section).
      */
-    private int findTopTerminal(List<CableScanner.CableBlock> cable) {
-        boolean seenCable = false;
+    private int findTopTerminalEnd(List<CableScanner.CableBlock> cable) {
+        boolean seenCable     = false;
+        boolean inTerminal    = false;
+
         for (int i = 0; i < cable.size(); i++) {
             CableScanner.CableBlock cb = cable.get(i);
-            if (cb.type == CableScanner.BlockType.CABLE) seenCable = true;
-            if (seenCable && cb.type == CableScanner.BlockType.TERMINAL) return i;
+
+            if (cb.type == CableScanner.BlockType.CABLE) {
+                if (inTerminal) {
+                    // We've exited the top terminal — this is the start of downhill
+                    return i;
+                }
+                seenCable = true;
+            }
+
+            if (seenCable && (cb.type == CableScanner.BlockType.TERMINAL
+                    || cb.type == CableScanner.BlockType.CORNER)) {
+                inTerminal = true;
+            }
         }
-        return cable.size() / 2; // fallback
+        return cable.size() / 2; // fallback if no terminal found
     }
 
     /**
