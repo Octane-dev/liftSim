@@ -31,17 +31,21 @@ public class LiftManager {
                 String name  = (String) m.get("name");
                 String world = (String) m.get("world");
 
-                Map<?, ?> cs = (Map<?, ?>) m.get("cable-start");
+                @SuppressWarnings("unchecked")
+                Map<String, Object> liftMap = (Map<String, Object>) m;
+                @SuppressWarnings("unchecked")
+                Map<String, Object> cs = (Map<String, Object>) liftMap.get("cable-start");
                 int sx = ((Number) cs.get("x")).intValue();
                 int sy = ((Number) cs.get("y")).intValue();
                 int sz = ((Number) cs.get("z")).intValue();
 
-                int cableSpacing     = ((Number) m.getOrDefault("cable-spacing", 24)).intValue();
-                int terminalSpacing  = ((Number) m.getOrDefault("terminal-spacing", 4)).intValue();
-                int transitionBlocks = ((Number) m.getOrDefault("transition-blocks", 6)).intValue();
-                double cornerThresh  = ((Number) m.getOrDefault("corner-angle-threshold", 30)).doubleValue();
+                int cableSpacing     = ((Number) liftMap.getOrDefault("cable-spacing", 24)).intValue();
+                int terminalSpacing  = ((Number) liftMap.getOrDefault("terminal-spacing", 4)).intValue();
+                int transitionBlocks = ((Number) liftMap.getOrDefault("transition-blocks", 6)).intValue();
+                double cornerThresh  = ((Number) liftMap.getOrDefault("corner-angle-threshold", 30)).doubleValue();
 
-                Map<?, ?> templates = (Map<?, ?>) m.get("templates");
+                @SuppressWarnings("unchecked")
+                Map<String, Object> templates = (Map<String, Object>) liftMap.get("templates");
                 LiftDefinition.TemplateDefinition uphill   = parseTemplate((Map<?, ?>) templates.get("uphill"));
                 LiftDefinition.TemplateDefinition downhill = parseTemplate((Map<?, ?>) templates.get("downhill"));
 
