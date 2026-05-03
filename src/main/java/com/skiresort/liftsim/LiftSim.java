@@ -7,15 +7,16 @@ import java.io.File;
 public class LiftSim extends JavaPlugin {
 
     private LiftManager liftManager;
+    private RegistrationManager registrationManager;
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
-        // Ensure state directory exists
         File stateDir = new File(getDataFolder(), "state");
         if (!stateDir.exists()) stateDir.mkdirs();
 
-        liftManager = new LiftManager(this);
+        liftManager         = new LiftManager(this);
+        registrationManager = new RegistrationManager(this);
         liftManager.loadDefinitions();
 
         LiftCommand liftCommand = new LiftCommand(this);
@@ -30,5 +31,6 @@ public class LiftSim extends JavaPlugin {
         getLogger().info("LiftSim disabled.");
     }
 
-    public LiftManager getLiftManager() { return liftManager; }
+    public LiftManager         getLiftManager()         { return liftManager; }
+    public RegistrationManager getRegistrationManager() { return registrationManager; }
 }
