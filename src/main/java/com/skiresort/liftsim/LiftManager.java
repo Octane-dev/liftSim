@@ -49,7 +49,16 @@ public class LiftManager {
                 LiftDefinition.TemplateDefinition uphill   = parseTemplate((Map<?, ?>) templates.get("uphill"));
                 LiftDefinition.TemplateDefinition downhill = parseTemplate((Map<?, ?>) templates.get("downhill"));
 
+                // Load optional cable direction hint
+                Object cdxObj = liftMap.get("cable-dir-x");
+                Object cdyObj = liftMap.get("cable-dir-y");
+                Object cdzObj = liftMap.get("cable-dir-z");
+                Double cdx = cdxObj != null ? ((Number) cdxObj).doubleValue() : null;
+                Double cdy = cdyObj != null ? ((Number) cdyObj).doubleValue() : null;
+                Double cdz = cdzObj != null ? ((Number) cdzObj).doubleValue() : null;
+
                 definitions.put(name, new LiftDefinition(name, world, sx, sy, sz,
+                        cdx, cdy, cdz,
                         cableSpacing, terminalSpacing, transitionBlocks, cornerThresh,
                         uphill, downhill));
             } catch (Exception e) {
@@ -100,6 +109,7 @@ public class LiftManager {
         // Scan the cable
         List<CableScanner.CableBlock> cable = CableScanner.scan(
                 world, def.cableStartX, def.cableStartY, def.cableStartZ,
+                def.cableDirDX, def.cableDirDY, def.cableDirDZ,
                 def.cornerAngleThreshold, 100000);
 
         if (cable.isEmpty()) return "No cable blocks found from start point.";
@@ -294,7 +304,11 @@ public class LiftManager {
             for (int dy = 0; dy < tmpl.sizeY; dy++) {
                 for (int dz = 0; dz < tmpl.sizeZ; dz++) {
                     Block src  = world.getBlockAt(tmpl.originX + dx, tmpl.originY + dy, tmpl.originZ + dz);
-                    if (src.getType() == Material.AIR) continue; // don't paste air
+                    // Skip air blocks from template (-a style paste, preserves existing blocks)
+                    Material srcMat = src.getType();
+                    if (srcMat == Material.AIR
+                            || srcMat == Material.CAVE_AIR
+                            || srcMat == Material.VOID_AIR) continue;
 
                     int destX = destOriginX + dx;
                     int destY = destOriginY + dy;
